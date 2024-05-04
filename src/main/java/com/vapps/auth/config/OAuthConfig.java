@@ -73,7 +73,7 @@ public class OAuthConfig {
 					{
 						try {
 							authorize
-								.requestMatchers("/index.html", "/welcome", "/static/**",
+								.requestMatchers("/", "/index.html", "/welcome", "/static/**",
 										"/*.ico", "/*.json", "/*.png", "/*.jpg",
 										"/*jpeg", "/*.html", "/authenticate"
 										)
