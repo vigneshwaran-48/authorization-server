@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,6 +42,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 
 @Configuration
+@EnableWebSecurity
 public class OAuthConfig {
 
     @Autowired
@@ -71,7 +73,7 @@ public class OAuthConfig {
 					{
 						try {
 							authorize
-								.requestMatchers("/", "/index.html", "/static/**",
+								.requestMatchers("/index.html", "/welcome", "/static/**",
 										"/*.ico", "/*.json", "/*.png", "/*.jpg",
 										"/*jpeg", "/*.html", "/authenticate"
 										)
@@ -81,7 +83,7 @@ public class OAuthConfig {
 								.formLogin()
 									.loginPage("/oauth")
 									.loginProcessingUrl("/authenticate")
-                                    .defaultSuccessUrl("/")
+                                    .defaultSuccessUrl("/welcome")
 									.usernameParameter("name")
 									.passwordParameter("password")
 									.permitAll()
@@ -90,7 +92,7 @@ public class OAuthConfig {
 									.logout(l -> l
 											.invalidateHttpSession(true)
 											.deleteCookies()
-											.logoutSuccessUrl("/"));
+											.logoutSuccessUrl("/welcome"));
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

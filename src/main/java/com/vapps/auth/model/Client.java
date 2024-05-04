@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -43,6 +44,8 @@ public class Client {
 	private String clientSettings;
 	@Size(max = 2000)
 	private String tokenSettings;
+	@DocumentReference
+	private AppUser user;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -85,6 +88,23 @@ public class Client {
 
         return client;
     }
+
+	public ClientDTO toDTO() {
+		ClientDTO clientDTO = new ClientDTO();
+		clientDTO.setAuthorizationGrantTypes(authorizationGrantTypes);
+		clientDTO.setClientAuthenticationMethods(clientAuthenticationMethods);
+		clientDTO.setClientId(clientId);
+		clientDTO.setClientIdIssuedAt(clientIdIssuedAt);
+		clientDTO.setClientName(clientName);
+		clientDTO.setClientSecret(clientSecret);
+		clientDTO.setClientSecretExpiresAt(clientSecretExpiresAt);
+		clientDTO.setClientSettings(clientSettings);
+		clientDTO.setId(id);
+		clientDTO.setRedirectUris(redirectUris);
+		clientDTO.setScopes(scopes);
+		clientDTO.setTokenSettings(tokenSettings);
+		return clientDTO;
+	}
 
     private static String writeMap(Map<String, Object> data) {
 		try {
