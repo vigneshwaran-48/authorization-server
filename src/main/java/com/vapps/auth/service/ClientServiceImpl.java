@@ -1,17 +1,24 @@
 package com.vapps.auth.service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient.Builder;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.google.common.base.Preconditions;
 import com.vapps.auth.dto.ClientDTO;
+import com.vapps.auth.dto.ScopeDTO;
+import com.vapps.auth.dto.UserDTO;
 import com.vapps.auth.exception.AppException;
 import com.vapps.auth.model.AppUser;
 import com.vapps.auth.model.Client;
@@ -26,6 +33,21 @@ public class ClientServiceImpl implements ClientService {
     @Autowired
     private ScopeService scopeService;
 
+	@Autowired
+	private AppUserService appUserService;
+
+	@Autowired
+	private TokenSettings tokenSettings;
+
+	@Autowired
+	private ClientSettings clientSettings;
+
+	@Value("${app.default.scopes}")
+	private String defaultScopes;
+
+	@Value("${app.client.clientIdPrefix}")
+	private String clientIdPrefix;
+
     @Override
     public String addClient(ClientDTO client) throws AppException {
         Assert.notNull(client, "Client can't be null");
@@ -38,9 +60,30 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public String addClient(String userId, Builder registeredClient) throws AppException {
-        Client addedClient = clientRepository.save(Client.build(registeredClient.build()));
+        UserDTO appUser = appUserService.findByUserId(userId);
+		if(appUser == null) {
+			throw new AppException("User not found for " + userId);
+		}
+		String clientId = UUID.randomUUID().toString();
+		registeredClient
+				.clientId(clientIdPrefix + "-" + clientId.toString())
+				.tokenSettings(tokenSettings)
+				.clientSettings(clientSettings);
+
+		Client client = Client.build(registeredClient.build());
+
+		if(clientRepository.findByUserIdAndClientName(userId, client.getClientName()).isPresent()) {
+			throw new AppException(HttpStatus.BAD_REQUEST.value(), "Client already existing with this name");
+		}
+		client.setUser(AppUser.build(appUser));
+		Client addedClient = clientRepository.save(client);
+
 		if(addedClient != null) {
-			return addedClient.getId();
+			if(!isDefaultScopes(addedClient.getScopes())) {
+				System.out.println("Adding scopes to db ...");
+				addScopes(addedClient, addedClient.getScopes());
+			}
+			return addedClient.getClientId();
 		}
 		throw new AppException("Can't create the client");
     }
@@ -106,6 +149,31 @@ public class ClientServiceImpl implements ClientService {
 		//TODO Need to validate the client details before updating
 		clientRepository.save(newClient);
     }
+
+	private boolean isDefaultScopes(String clientScopes) {
+		List<String> clientScopesList = List.of(clientScopes.split(","));
+		List<String> defaultScopesList = List.of(defaultScopes.split(","));
+
+		for(String scope : clientScopesList) {
+			if(!defaultScopesList.contains(scope)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void addScopes(Client client, String scopes) throws AppException {
+		List<ScopeDTO> scopeDetails = Arrays
+				.stream(scopes.split(","))
+				.map(scope -> {
+					ScopeDTO scopeDetail = new ScopeDTO();
+					scopeDetail.setClient(client.toDTO());
+					scopeDetail.setScopeName(scope);
+					return scopeDetail;
+				})
+				.toList();
+		scopeService.checkAndScopes(client.toDTO(), scopeDetails);
+	}
 
     private void checkAndUpdateClient(Client prevClient, Client newClient) {
 		if(newClient.getId() == null) {

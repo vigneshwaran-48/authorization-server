@@ -17,6 +17,10 @@ spring:
 
 app:
   baseurl: http://auth-server:9000
+  default:
+    scopes: openid,APP.all
+  client:
+    clientIdPrefix: vapps
 logging:
   level:
     org:
