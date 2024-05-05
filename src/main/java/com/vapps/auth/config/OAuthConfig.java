@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -37,6 +38,9 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 import com.vapps.auth.service.CustomOAuth2UserService;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -73,7 +77,7 @@ public class OAuthConfig {
 					{
 						try {
 							authorize
-								.requestMatchers("/", "/index.html", "/welcome", "/static/**",
+								.requestMatchers("/index.html", "/welcome", "/static/**",
 										"/*.ico", "/*.json", "/*.png", "/*.jpg",
 										"/*jpeg", "/*.html", "/authenticate"
 										)
@@ -104,9 +108,29 @@ public class OAuthConfig {
 					.and()
 					.and()
 					.csrf().disable()
+				.addFilterAfter(staticResourceFilter(), AuthorizationFilter.class)
 				.build();
 
 	}
+
+	/**
+	 * For client side react routing.
+	 */
+	@Bean
+	Filter staticResourceFilter() {
+    return (request, response, chain) -> {
+        String path = ((HttpServletRequest) request).getRequestURI();
+
+        boolean isApi = path.startsWith("/api");
+        boolean isStaticResource = path.matches(".*\\.(js|css|ico|png|jpg|jpeg|html)");
+
+        if (isApi || isStaticResource) {
+            chain.doFilter(request, response);
+        } else {
+            request.getRequestDispatcher("/index.html").forward(request, response);
+        }
+    };
+}
 
     @Bean
 	public BCryptPasswordEncoder passwordEncoder() {
