@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -48,6 +50,8 @@ public class ClientServiceImpl implements ClientService {
 	@Value("${app.client.clientIdPrefix}")
 	private String clientIdPrefix;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ClientServiceImpl.class);
+
     @Override
     public String addClient(ClientDTO client) throws AppException {
         Assert.notNull(client, "Client can't be null");
@@ -80,7 +84,7 @@ public class ClientServiceImpl implements ClientService {
 
 		if(addedClient != null) {
 			if(!isDefaultScopes(addedClient.getScopes())) {
-				System.out.println("Adding scopes to db ...");
+				LOGGER.info("Adding scopes to db ...");
 				addScopes(addedClient, addedClient.getScopes());
 			}
 			return addedClient.getClientId();
