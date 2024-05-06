@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -69,16 +70,36 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     }
 
     @Override
-    public OAuth2Authorization findById(String id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findById'");
-    }
+	public OAuth2Authorization findById(String id) {
+		Assert.hasText(id, "Id cannot be empty");
+		Authorization authorization = authorizationRepository.findById(id).orElse(null);
+		return toOAuth2Authorization(authorization);
+	}
 
-    @Override
-    public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findByToken'");
-    }
+	@Override
+	public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
+		Assert.hasText(token, "Token cannot be empty");
+		Optional<Authorization> retrieved = null;
+		if(tokenType == null) {
+			retrieved = authorizationRepository.findByStateOrAuthorizationCodeValueOrAccessTokenValueOrRefreshTokenValue(token);
+		}
+		else if(OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
+			retrieved = authorizationRepository.findByState(token);
+		}
+		else if(OAuth2ParameterNames.ACCESS_TOKEN.equals(tokenType.getValue())) {
+			retrieved = authorizationRepository.findByAccessTokenValue(token);
+		}
+		else if(OAuth2ParameterNames.REFRESH_TOKEN.equals(tokenType.getValue())) {
+			retrieved = authorizationRepository.findByRefreshTokenValue(token);
+		}
+		else if(OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
+			retrieved = authorizationRepository.findByAuthorizationCodeValue(token);
+		}
+		else {
+			retrieved = Optional.empty();
+		}
+		return retrieved.map(this::toOAuth2Authorization).orElse(null);
+	}
 
     private OAuth2Authorization toOAuth2Authorization(Authorization authorization) {
         RegisteredClient registeredClient = registeredClientRepository.findById(authorization.getRegisteredClientId());
