@@ -21,6 +21,9 @@ public class ScopeServiceImpl implements ScopeService {
     @Autowired
     private ScopeRepository scopeRepository;
 
+    @Autowired
+    private ClientService clientService;
+
     @Override
     public Optional<ScopeDTO> getScopesOfClient() {
         return Optional.empty();
@@ -60,8 +63,9 @@ public class ScopeServiceImpl implements ScopeService {
     }
 
     @Override
-    public List<String> deleteAllScopesOfClient(String clientId) {
-        List<Scope> deletedScopes = scopeRepository.deleteByClientClientId(clientId);
+    public List<String> deleteAllScopesOfClient(String userId, String clientId) {
+        ClientDTO clientDTO = clientService.getClientById(userId, clientId);
+        List<Scope> deletedScopes = scopeRepository.deleteByClientId(clientDTO.getId());
         List<String> deletedScopeIds = new ArrayList<>();
 
         if(deletedScopes == null) {

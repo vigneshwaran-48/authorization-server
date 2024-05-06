@@ -9,7 +9,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -51,6 +54,11 @@ public class OAuthConfig {
 
     @Autowired
 	private CustomOAuth2UserService userService;
+
+	@Value("${spring.security.oauth2.authorizationserver.issuer}")
+	private String issuer;
+
+	private final static Logger LOGGER = LoggerFactory.getLogger(OAuthConfig.class);
 
     @Bean
 	@Order(1)
@@ -155,7 +163,11 @@ public class OAuthConfig {
 
 	@Bean
 	public AuthorizationServerSettings authorizationServerSettings() {
-		return AuthorizationServerSettings.builder().build();
+		LOGGER.info("Issuer {}", issuer);
+		return AuthorizationServerSettings
+						.builder()
+						.issuer(issuer)
+						.build();
 	}
 
 	@Bean

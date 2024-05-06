@@ -13,6 +13,6 @@ public interface ScopeRepository extends MongoRepository<Scope, String> {
     Optional<Scope> findByScopeName(String scopeName);
     Optional<Scope> findByClientIdAndScopeName(String clientId, String scopeName);
     @Transactional
-    List<Scope> deleteByClientClientId(String clientId);
+    List<Scope> deleteByClientId(String id);
     
 }

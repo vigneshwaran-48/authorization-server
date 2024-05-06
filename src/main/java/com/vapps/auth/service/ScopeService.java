@@ -19,7 +19,7 @@ public interface ScopeService {
 
     boolean isScopePresent(String clientId, Long scopeId);
 
-    List<String> deleteAllScopesOfClient(String clientId);
+    List<String> deleteAllScopesOfClient(String userId, String clientId);
 
     List<String> checkAndScopes(ClientDTO client, List<ScopeDTO> scopes) throws AppException;
 }

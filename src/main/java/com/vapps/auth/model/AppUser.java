@@ -44,6 +44,7 @@ public class AppUser {
 
     public UserDTO toDTO() {
         UserDTO userDTO = new UserDTO();
+        userDTO.setId(id);
         userDTO.setAge(age);
         userDTO.setDob(dob);
         userDTO.setEmail(email);

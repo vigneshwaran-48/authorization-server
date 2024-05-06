@@ -1,13 +1,14 @@
-server:
-  port: 9000
-
 spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: authorization-server
   main:
     allow-circular-references: true
   security:
     oauth2:
       authorizationserver:
-        issuer: http://auth-server:9000
+        issuer: ${AUTHORIZATION_SERVER_BASE_URL}
       client:
         registration:
           github:
@@ -17,8 +18,9 @@ spring:
               - user:email
               - read:user
 
+
 app:
-  baseurl: http://auth-server:9000
+  baseurl: ${AUTHORIZATION_SERVER_BASE_URL}
   default:
     scopes: openid,APP.all
   client:
