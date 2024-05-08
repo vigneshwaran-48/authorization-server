@@ -17,6 +17,7 @@ spring:
             scope:
               - user:email
               - read:user
+            redirect-uri: ${GITHUB_REDIRECT_URI}
 
 
 app:
