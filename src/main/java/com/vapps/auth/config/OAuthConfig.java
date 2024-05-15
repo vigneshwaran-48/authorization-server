@@ -39,7 +39,9 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-
+import com.vapps.auth.dto.UserDTO;
+import com.vapps.auth.exception.AppException;
+import com.vapps.auth.service.AppUserService;
 import com.vapps.auth.service.CustomOAuth2UserService;
 
 import jakarta.servlet.Filter;
@@ -54,6 +56,9 @@ public class OAuthConfig {
 
     @Autowired
 	private CustomOAuth2UserService userService;
+
+	@Autowired
+	private AppUserService appUserService;
 
 	@Value("${spring.security.oauth2.authorizationserver.issuer}")
 	private String issuer;
@@ -206,17 +211,20 @@ public class OAuthConfig {
 	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
 		return context -> {
 			Authentication principal = context.getPrincipal();
-			if (context.getTokenType().getValue().equals("id_token")) {
-				context.getClaims().claim("Test", "Test Id Token");
+			try {
+				UserDTO userDTO = appUserService.findByUserId(principal.getName());
+				context.getClaims().claim("name", userDTO.getUserName());
+				context.getClaims().claim("email", userDTO.getEmail());
+				context.getClaims().claim("id", userDTO.getId());
+			} catch (AppException e) {
+				LOGGER.error(e.getMessage(), e);
 			}
 			if (context.getTokenType().getValue().equals("access_token")) {
-				context.getClaims().claim("Test", "Test Access Token");
 				Set<String> authorities = principal.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
                 context.getClaims().claim("authorities", authorities)
                         .claim("user", principal.getName());
 			}
-
 		};
 	}
 }
