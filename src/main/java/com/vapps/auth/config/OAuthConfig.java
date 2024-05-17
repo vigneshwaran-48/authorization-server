@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
@@ -95,6 +96,12 @@ public class OAuthConfig {
 										"/*jpeg", "/*.html", "/authenticate"
 										)
 								.permitAll()
+								.requestMatchers("/test").permitAll()
+								.requestMatchers(HttpMethod.POST, "/api/user").permitAll()
+								.requestMatchers(HttpMethod.OPTIONS, "/api/user")
+								.permitAll()
+										.requestMatchers(HttpMethod.GET, "/api/user/{userId}/profile-image")
+										.permitAll()
 								.anyRequest().authenticated()
 								.and()
 								.formLogin()
@@ -107,6 +114,8 @@ public class OAuthConfig {
 								.and()
 									.csrf().disable()
 									.logout(l -> l
+											.clearAuthentication(true)
+											.deleteCookies()
 											.invalidateHttpSession(true)
 											.deleteCookies()
 											.logoutSuccessUrl("/welcome"));
@@ -216,6 +225,7 @@ public class OAuthConfig {
 				context.getClaims().claim("name", userDTO.getUserName());
 				context.getClaims().claim("email", userDTO.getEmail());
 				context.getClaims().claim("id", userDTO.getId());
+				context.getClaims().claim("image", userDTO.getProfileImage());
 			} catch (AppException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
