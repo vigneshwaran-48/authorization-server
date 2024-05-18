@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.vapps.auth.dto.UserDTO;
+import com.vapps.auth.util.OAuth2Provider;
 
 import lombok.Data;
 
@@ -20,12 +21,13 @@ public class AppUser {
 	@Indexed(unique = true)
 	private String email;
 	private int age;
-	private LocalDate dob;
+	private LocalDate dob = LocalDate.of(1983, 3, 23);
 	private String mobile;
 	private String password;
 	private String firstName;
 	private String lastName;
 	private String profileImage;
+    private OAuth2Provider provider;
 
     public static AppUser build(UserDTO userDTO) {
         AppUser user = new AppUser();
@@ -39,6 +41,7 @@ public class AppUser {
         user.setPassword(userDTO.getPassword());
         user.setProfileImage(userDTO.getProfileImage());
         user.setUserName(userDTO.getUserName());
+        user.setProvider(userDTO.getProvider());
         return user;
     }
 
@@ -54,6 +57,7 @@ public class AppUser {
         userDTO.setPassword("*****");
         userDTO.setProfileImage(profileImage);
         userDTO.setUserName(userName);
+        userDTO.setProvider(provider);
         return userDTO;
     }
 }

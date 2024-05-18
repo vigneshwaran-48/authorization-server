@@ -5,9 +5,8 @@ import lombok.Data;
 @Data
 public class UserProfileImageDTO {
     
-    private Long id;
+    private String id;
     private UserDTO userDetails;
-    private String imageName;
     private String type;
     private byte[] imageBytes;
 

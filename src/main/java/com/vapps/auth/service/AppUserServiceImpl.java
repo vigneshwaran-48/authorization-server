@@ -3,6 +3,7 @@ package com.vapps.auth.service;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import com.vapps.auth.exception.AppException;
 import com.vapps.auth.model.AppUser;
 import com.vapps.auth.model.AppUserPrincipal;
 import com.vapps.auth.repository.UserRepository;
+import com.vapps.auth.util.OAuth2Provider;
 
 @Service
 public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
@@ -43,11 +45,14 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser appUser = userRepository.findByUserName(username);
+        AppUser appUser = userRepository.findById(username).orElse(null);
 
         if (appUser == null) {
-            appUser = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            appUser = userRepository.findByUserName(username);
+            if (appUser == null) {
+                appUser = userRepository.findByEmailAndProvider(username, OAuth2Provider.VAPPS)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            }
         }
 
         Collection<GrantedAuthority> authorities = new HashSet<>();
@@ -87,11 +92,8 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
 
     @Override
     public boolean userExists(String username) {
-        AppUser appUser = userRepository.findByUserName(username);
-        if (appUser != null && appUser.getUserName().equals(username)) {
-            return true;
-        }
-        return false;
+        Optional<AppUser> appUser = userRepository.findById(username);
+        return appUser.isPresent();
     }
 
     private AppUser toAppUser(UserDetails user) {
@@ -109,13 +111,16 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
         Preconditions.checkArgument(user != null, "User data can't be empty");
         AppUser appUser = AppUser.build(user);
 
-        try {
-            if (findByUserName(appUser.getUserName()) != null) {
-                throw new AppException(HttpStatus.BAD_REQUEST.value(), "User name exists");
-            }
-        } catch (AppException e) {
-            LOGGER.info("User not exist with given details, Proceeding to create a user.");
+        if (userRepository.findByUserNameAndProvider(user.getUserName(), user.getProvider()).isPresent()) {
+            LOGGER.info("Name {} for provider {} already in use", user.getUserName(), user.getProvider());
+            throw new AppException(HttpStatus.BAD_REQUEST.value(), "That name already taken");
         }
+
+        if (userRepository.findByEmailAndProvider(user.getEmail(), user.getProvider()).isPresent()) {
+            LOGGER.info("Email {} for provider {} already in use", user.getUserName(), user.getProvider());
+            throw new AppException(HttpStatus.BAD_REQUEST.value(), "Email exists");
+        }
+
         if (appUser.getId() == null) {
             UUID uuid = UUID.randomUUID();
             appUser.setId(uuid.toString());
@@ -147,6 +152,16 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
         }
 
         checkAndUpdateUser(AppUser.build(prevUserData), appUser);
+
+        Optional<AppUser> userByName = userRepository.findByUserNameAndProvider(user.getUserName(), user.getProvider());
+        if (userByName.isPresent() && !userByName.get().getId().equals(user.getId())) {
+            throw new AppException(HttpStatus.BAD_REQUEST.value(), "That name already taken!");
+        }
+
+        Optional<AppUser> userByEmail = userRepository.findByEmailAndProvider(user.getEmail(), user.getProvider());
+        if (userByEmail.isPresent() && !userByEmail.get().getId().equals(user.getId())) {
+            throw new AppException(HttpStatus.BAD_REQUEST.value(), "That email already exists!");
+        }
 
         userRepository.save(appUser);
     }
@@ -217,8 +232,7 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
         if (newData.getMobile() == null || newData.getMobile().isBlank()) {
             newData.setMobile(oldData.getMobile());
         }
-        if (newData.getPassword() == null || newData.getPassword().isBlank()) {
-            newData.setPassword(oldData.getPassword());
-        }
+        newData.setProvider(oldData.getProvider());
+        newData.setPassword(oldData.getPassword());
     }
 }

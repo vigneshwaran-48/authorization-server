@@ -46,17 +46,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		String id = user.getName();
 		LOGGER.info("User id {}", id);
 
-		if(userRepository == null) {
-            LOGGER.info("REPOSITORY IS NULL --------------");
-			return;
-		}
 		if(userRepository.findById(id).isEmpty()) {
 			OAuth2Provider oauth2Provider = OAuth2Provider.getByProviderName(providerId);
 			if (oauth2Provider == null) {
 				throw new AppException("Invalid provider!");
 			}
 			AppUser appUser = oauth2Provider.getProviderService(user).buildAppUser();
-
+			appUser.setProvider(oauth2Provider);
+			/**
+			 * Not validating for duplicate name or email. Hoping that other OAuth providers
+			 * will maintain atleast a unique email.
+			 */
 			userRepository.save(appUser);
 
             UserProvider userProvider = new UserProvider();
@@ -65,7 +65,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userProviderRepository.save(userProvider);
 
             LOGGER.info("Created user from social login");
-
 		}
 		else {
             LOGGER.info("User with {} already present!", id);

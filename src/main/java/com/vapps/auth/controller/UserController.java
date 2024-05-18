@@ -29,6 +29,7 @@ import com.vapps.auth.dto.UserProfileImageDTO;
 import com.vapps.auth.exception.AppException;
 import com.vapps.auth.service.AppUserService;
 import com.vapps.auth.service.UserProfileImageService;
+import com.vapps.auth.util.OAuth2Provider;
 
 @RestController
 @RequestMapping(path = "/api/user")
@@ -48,6 +49,7 @@ public class UserController {
 	@PostMapping
 	public ResponseEntity<UserControllerResponse> createUser(@RequestBody UserDTO requestUser) {
 		try {
+			requestUser.setProvider(OAuth2Provider.VAPPS);
 			String userId = appUserService.createUser(requestUser);
 			requestUser.setId(userId);
 			requestUser.setPassword("*****");
@@ -101,7 +103,7 @@ public class UserController {
 	public ResponseEntity<byte[]> getProfileImage(@PathVariable String userId) {
 		byte[] profileImageBytes = null;
 		try {
-			profileImageBytes = userProfileImageService.getImage(userId, "profile.png");
+			profileImageBytes = userProfileImageService.getImage(userId);
 
 			return ResponseEntity.ok().contentType(MediaType.valueOf("image/png")).body(profileImageBytes);
 		} catch (Exception e) {
@@ -126,7 +128,6 @@ public class UserController {
 			byte[] imageBytes = image.getBytes();
 
 			UserProfileImageDTO userImage = new UserProfileImageDTO();
-			userImage.setImageName("profile.png");
 			userImage.setType(image.getContentType());
 			LOG.info("Constructed profile image object => " + userImage);
 			userImage.setImageBytes(imageBytes);

@@ -93,7 +93,7 @@ public class OAuthConfig {
 							authorize
 								.requestMatchers("/index.html", "/welcome", "/static/**",
 										"/*.ico", "/*.json", "/*.png", "/*.jpg",
-										"/*jpeg", "/*.html", "/authenticate"
+										"/*jpeg", "/*.html", "/authenticate", "/*.js.map"
 										)
 								.permitAll()
 								.requestMatchers("/test").permitAll()

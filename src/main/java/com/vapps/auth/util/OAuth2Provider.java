@@ -8,7 +8,8 @@ import com.vapps.auth.util.providers.ProviderService;
 
 public enum OAuth2Provider {
     GOOGLE("google", new GoogleProviderService()),
-    GITHUB("github", new GithubProviderService());
+    GITHUB("github", new GithubProviderService()),
+    VAPPS("vapps", null);
 
     private String providerName;
     private ProviderService providerService;
