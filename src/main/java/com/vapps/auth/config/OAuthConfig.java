@@ -118,7 +118,7 @@ public class OAuthConfig {
 											.deleteCookies()
 											.invalidateHttpSession(true)
 											.deleteCookies()
-											.logoutSuccessUrl("/welcome"));
+											.logoutSuccessUrl(issuer + "/welcome"));
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

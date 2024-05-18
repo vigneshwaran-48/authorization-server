@@ -1,5 +1,6 @@
 package com.vapps.auth.service;
 
+import java.security.Principal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.jackson2.CoreJackson2Module;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -33,6 +35,8 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vapps.auth.exception.AppException;
+import com.vapps.auth.model.AppUser;
 import com.vapps.auth.model.Authorization;
 import com.vapps.auth.repository.AuthorizationRepository;
 
@@ -41,9 +45,12 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
 
     @Autowired
     private AuthorizationRepository authorizationRepository;
-    
+
     @Autowired
-	private RegisteredClientRepository registeredClientRepository;
+    private AppUserService userService;
+
+    @Autowired
+    private RegisteredClientRepository registeredClientRepository;
 
     private ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LoggerFactory.getLogger(OAuth2AuthorizationServiceImpl.class);
@@ -70,36 +77,32 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
     }
 
     @Override
-	public OAuth2Authorization findById(String id) {
-		Assert.hasText(id, "Id cannot be empty");
-		Authorization authorization = authorizationRepository.findById(id).orElse(null);
-		return toOAuth2Authorization(authorization);
-	}
+    public OAuth2Authorization findById(String id) {
+        Assert.hasText(id, "Id cannot be empty");
+        Authorization authorization = authorizationRepository.findById(id).orElse(null);
+        return toOAuth2Authorization(authorization);
+    }
 
-	@Override
-	public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
-		Assert.hasText(token, "Token cannot be empty");
-		Optional<Authorization> retrieved = null;
-		if(tokenType == null) {
-			retrieved = authorizationRepository.findByStateOrAuthorizationCodeValueOrAccessTokenValueOrRefreshTokenValue(token);
-		}
-		else if(OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
-			retrieved = authorizationRepository.findByState(token);
-		}
-		else if(OAuth2ParameterNames.ACCESS_TOKEN.equals(tokenType.getValue())) {
-			retrieved = authorizationRepository.findByAccessTokenValue(token);
-		}
-		else if(OAuth2ParameterNames.REFRESH_TOKEN.equals(tokenType.getValue())) {
-			retrieved = authorizationRepository.findByRefreshTokenValue(token);
-		}
-		else if(OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-			retrieved = authorizationRepository.findByAuthorizationCodeValue(token);
-		}
-		else {
-			retrieved = Optional.empty();
-		}
-		return retrieved.map(this::toOAuth2Authorization).orElse(null);
-	}
+    @Override
+    public OAuth2Authorization findByToken(String token, OAuth2TokenType tokenType) {
+        Assert.hasText(token, "Token cannot be empty");
+        Optional<Authorization> retrieved = null;
+        if (tokenType == null) {
+            retrieved = authorizationRepository
+                    .findByStateOrAuthorizationCodeValueOrAccessTokenValueOrRefreshTokenValue(token);
+        } else if (OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
+            retrieved = authorizationRepository.findByState(token);
+        } else if (OAuth2ParameterNames.ACCESS_TOKEN.equals(tokenType.getValue())) {
+            retrieved = authorizationRepository.findByAccessTokenValue(token);
+        } else if (OAuth2ParameterNames.REFRESH_TOKEN.equals(tokenType.getValue())) {
+            retrieved = authorizationRepository.findByRefreshTokenValue(token);
+        } else if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
+            retrieved = authorizationRepository.findByAuthorizationCodeValue(token);
+        } else {
+            retrieved = Optional.empty();
+        }
+        return retrieved.map(this::toOAuth2Authorization).orElse(null);
+    }
 
     private OAuth2Authorization toOAuth2Authorization(Authorization authorization) {
         RegisteredClient registeredClient = registeredClientRepository.findById(authorization.getRegisteredClientId());
@@ -152,7 +155,32 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
         } else {
             LOGGER.info("Not a OIDC token");
         }
-        
+
+        /**
+         * Spent half of the day and found that while at some point inside the authenticate code
+         * flow they are setting subject to the token that time they are taking principal
+         * and getting the name from it, But it is null I checked it with debug also
+         * still null. So manually setting principal here. But still need to find
+         * why this arises.
+         */
+        /** Fix for access token getting flow */
+        /**
+         * May 18 2024 update. This issue occurs only for email password authentication flow.
+         * When using google or github for authentication this is not arising.
+         * 
+         */
+        String userPass = null;
+        try {
+            AppUser appUser = AppUser.build(userService.findByUserId(authorization.getPrincipalName()));
+            userPass = appUser.getPassword();
+        } catch (AppException e) {
+            LOGGER.info("User Not found with the principal name, So settings password as null");
+        }
+        UsernamePasswordAuthenticationToken principal =
+                new UsernamePasswordAuthenticationToken(authorization.getPrincipalName(), userPass);
+
+        builder.attribute(Principal.class.getName(), principal);
+
         return builder.build();
     }
 

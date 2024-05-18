@@ -7,7 +7,7 @@ spring:
   security:
     oauth2:
       authorizationserver:
-        issuer: http://localhost:9000
+        issuer: http://auth-server:9000
       client:
         registration:
           github:
@@ -26,7 +26,7 @@ spring:
               - profile
 
 app:
-  baseurl: http://localhost:9000
+  baseurl: http://auth-server:9000
   default:
     scopes: openid,APP.all
   client:

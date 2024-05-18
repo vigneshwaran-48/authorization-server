@@ -46,12 +46,14 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser appUser = userRepository.findById(username).orElse(null);
-
+        LOGGER.info("App user with id {}", appUser);
         if (appUser == null) {
             appUser = userRepository.findByUserName(username);
+            LOGGER.info("App user with name {}", appUser);
             if (appUser == null) {
                 appUser = userRepository.findByEmailAndProvider(username, OAuth2Provider.VAPPS)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                LOGGER.info("App user with email {}", appUser);
             }
         }
 
@@ -59,7 +61,7 @@ public class AppUserServiceImpl implements UserDetailsManager, AppUserService {
 
         authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-        String name = appUser.getId() != null ? appUser.getId().toString() : String.valueOf(-1);
+        String name = appUser.getId() != null ? appUser.getId() : String.valueOf(-1);
 
         AppUserPrincipal user = new AppUserPrincipal();
         user.setUserName(name);
