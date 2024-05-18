@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import com.vapps.auth.dto.UserProfileImageDTO;
+
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -23,5 +25,14 @@ public class UserProfileImage {
 	
     @Size(max = 100000)
 	private byte[] imageBytes;
+
+	public UserProfileImageDTO toDTO() {
+		UserProfileImageDTO userProfileImageDTO = new UserProfileImageDTO();
+		userProfileImageDTO.setId(id);
+		userProfileImageDTO.setImageBytes(imageBytes);
+		userProfileImageDTO.setType(type);
+		userProfileImageDTO.setUserDetails(user.toDTO());
+		return userProfileImageDTO;
+	}
     
 }

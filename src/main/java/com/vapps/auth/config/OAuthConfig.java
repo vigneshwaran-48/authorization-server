@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
@@ -39,7 +40,9 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-
+import com.vapps.auth.dto.UserDTO;
+import com.vapps.auth.exception.AppException;
+import com.vapps.auth.service.AppUserService;
 import com.vapps.auth.service.CustomOAuth2UserService;
 
 import jakarta.servlet.Filter;
@@ -54,6 +57,9 @@ public class OAuthConfig {
 
     @Autowired
 	private CustomOAuth2UserService userService;
+
+	@Autowired
+	private AppUserService appUserService;
 
 	@Value("${spring.security.oauth2.authorizationserver.issuer}")
 	private String issuer;
@@ -87,9 +93,15 @@ public class OAuthConfig {
 							authorize
 								.requestMatchers("/index.html", "/welcome", "/static/**",
 										"/*.ico", "/*.json", "/*.png", "/*.jpg",
-										"/*jpeg", "/*.html", "/authenticate"
+										"/*jpeg", "/*.html", "/authenticate", "/*.js.map"
 										)
 								.permitAll()
+								.requestMatchers("/test").permitAll()
+								.requestMatchers(HttpMethod.POST, "/api/user").permitAll()
+								.requestMatchers(HttpMethod.OPTIONS, "/api/user")
+								.permitAll()
+										.requestMatchers(HttpMethod.GET, "/api/user/{userId}/profile-image")
+										.permitAll()
 								.anyRequest().authenticated()
 								.and()
 								.formLogin()
@@ -102,9 +114,11 @@ public class OAuthConfig {
 								.and()
 									.csrf().disable()
 									.logout(l -> l
+											.clearAuthentication(true)
+											.deleteCookies()
 											.invalidateHttpSession(true)
 											.deleteCookies()
-											.logoutSuccessUrl("/welcome"));
+											.logoutSuccessUrl(issuer + "/welcome"));
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -206,17 +220,21 @@ public class OAuthConfig {
 	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
 		return context -> {
 			Authentication principal = context.getPrincipal();
-			if (context.getTokenType().getValue().equals("id_token")) {
-				context.getClaims().claim("Test", "Test Id Token");
+			try {
+				UserDTO userDTO = appUserService.findByUserId(principal.getName());
+				context.getClaims().claim("name", userDTO.getUserName());
+				context.getClaims().claim("email", userDTO.getEmail());
+				context.getClaims().claim("id", userDTO.getId());
+				context.getClaims().claim("image", userDTO.getProfileImage());
+			} catch (AppException e) {
+				LOGGER.error(e.getMessage(), e);
 			}
 			if (context.getTokenType().getValue().equals("access_token")) {
-				context.getClaims().claim("Test", "Test Access Token");
 				Set<String> authorities = principal.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
                 context.getClaims().claim("authorities", authorities)
                         .claim("user", principal.getName());
 			}
-
 		};
 	}
 }

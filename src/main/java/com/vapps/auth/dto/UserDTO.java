@@ -6,6 +6,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.lang.NonNull;
 
+import com.vapps.auth.util.OAuth2Provider;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,4 +29,5 @@ public class UserDTO {
 	private String firstName;	
 	private String lastName;
 	private int age;
+	private OAuth2Provider provider;
 }
