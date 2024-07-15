@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,18 @@ public class ClientController {
 	@Autowired
 	private ClientService clientService;
 
-	private ClientAuthenticationMethod getClientAuth() {
-		return ClientAuthenticationMethod.CLIENT_SECRET_BASIC;
+	private void getClientAuth(Set<ClientAuthenticationMethod> clientAuthenticationMethods) {
+		clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+		clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_POST);
+		clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_JWT);
+	}
+
+	private void getGrantTypes(Set<AuthorizationGrantType> authorizationGrantTypes) {
+		authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE);
+		authorizationGrantTypes.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
+		authorizationGrantTypes.add(AuthorizationGrantType.DEVICE_CODE);
+		authorizationGrantTypes.add(AuthorizationGrantType.REFRESH_TOKEN);
+		authorizationGrantTypes.add(AuthorizationGrantType.JWT_BEARER);
 	}
 
 	@PostMapping
@@ -55,10 +66,10 @@ public class ClientController {
 		secret = passwordEncoder.encode(secret);
 		
 		RegisteredClient.Builder client = RegisteredClient.withId(UUID.randomUUID().toString()).clientSecret(secret)
-				.clientAuthenticationMethod(getClientAuth()).clientName(payload.getClientName())
+				.clientAuthenticationMethods(this::getClientAuth).clientName(payload.getClientName())
 				.scopes(scope -> scopes.forEach(scope::add))
 				.redirectUris(redirect -> redirectUris.forEach(redirect::add))
-				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE);
+				.authorizationGrantTypes(this::getGrantTypes);
 
 		String clientId = clientService.addClient(principal.getName(), client);
 
