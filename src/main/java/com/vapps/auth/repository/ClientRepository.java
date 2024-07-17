@@ -13,5 +13,5 @@ public interface ClientRepository extends MongoRepository<Client, String> {
 	Optional<Client> findByClientIdAndUserId(String clientId, String userId);
 	void deleteByClientId(String clientId);
 	List<Client> findByUserId(String userId);
-	Optional<Client> findByUserIdAndClientName(String userId, String clientName);
+	Optional<Client> findByClientNameIgnoreCase(String clientName);
 }

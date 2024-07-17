@@ -12,6 +12,8 @@ public interface ClientService {
     String addClient(ClientDTO client) throws AppException;
 	
 	boolean isClientExists(String clientId);
+
+	boolean isClientExistsByName(String clientName);
 	
 	void removeClient(String userId, String clientId);
 
