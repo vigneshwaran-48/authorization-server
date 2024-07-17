@@ -29,7 +29,7 @@ spring:
 app:
   baseurl: ${AUTHORIZATION_SERVER_BASE_URL}
   default:
-    scopes: openid,APP.all
+    scopes: openid
   client:
     clientIdPrefix: vapps
 logging:
