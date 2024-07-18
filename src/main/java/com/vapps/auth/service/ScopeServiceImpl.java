@@ -35,6 +35,15 @@ public class ScopeServiceImpl implements ScopeService {
     }
 
     @Override
+    public Optional<ScopeDTO> getScope(String scopeName) {
+        Optional<Scope> scope = scopeRepository.findByScopeNameIgnoreCase(scopeName);
+        if (scope.isPresent()) {
+            return Optional.of(scope.get().toDTO());
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public String createScope(ClientDTO client, ScopeDTO scopeDetails) throws AppException {
         if(scopeRepository.findByClientIdAndScopeName(
                 client.getId(), scopeDetails.getScopeName()).isPresent()) {

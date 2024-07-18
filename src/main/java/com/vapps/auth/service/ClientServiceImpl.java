@@ -171,14 +171,7 @@ public class ClientServiceImpl implements ClientService {
     private void addScopes(Client client, String scopes) throws AppException {
         List<ScopeDTO> scopeDetails = Arrays.stream(scopes.split(",")).map((final String scope) -> {
             ScopeDTO scopeDetail = new ScopeDTO();
-            /**
-             * Adding scopes with client name prefix if it is not a default scope like openid
-             */
             scopeDetail.setScopeName(scope);
-            if (!Arrays.stream(defaultScopes.split(","))
-                    .anyMatch(defaultScope -> defaultScope.equalsIgnoreCase(scope))) {
-                scopeDetail.setScopeName(client.getClientName() + "." + scope);
-            }
             scopeDetail.setClient(client.toDTO());
             return scopeDetail;
         }).toList();
@@ -190,7 +183,12 @@ public class ClientServiceImpl implements ClientService {
         for (String scope : client.getScopes().split(",")) {
             if (!Arrays.stream(defaultScopes.split(","))
                     .anyMatch(defaultScope -> defaultScope.equalsIgnoreCase(scope)) && !scope.toLowerCase()
-                    .startsWith((client.getClientName() + ".").toLowerCase())) {
+                    .startsWith((client.getClientName() + ".").toLowerCase()) && scopeService.getScope(scope)
+                    .isEmpty()) {
+                /**
+                 * If scope is not a default scope, not already prefixed with client name and
+                 * not a scope of other client too. Then prefix the client name with the scope.
+                 */
                 scopes.append(client.getClientName() + "." + scope).append(",");
                 continue;
             }

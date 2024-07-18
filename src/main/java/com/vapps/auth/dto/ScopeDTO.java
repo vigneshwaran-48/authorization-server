@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class ScopeDTO {
     
-    private Long scopeId;
+    private String scopeId;
     private String scopeName;
     private ClientDTO client;
 
