@@ -13,6 +13,8 @@ public interface ScopeService {
 
     Optional<ScopeDTO> getScope(String clientId, Long scopeId);
 
+    Optional<ScopeDTO> getScope(String scopeName);
+
     String createScope(ClientDTO client, ScopeDTO scopeDetails) throws AppException;
 
     String deleteScope(String clientId, Long scopeId);

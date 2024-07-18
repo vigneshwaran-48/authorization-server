@@ -1,5 +1,6 @@
 package com.vapps.auth.model;
 
+import com.vapps.auth.dto.ScopeDTO;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -16,4 +17,11 @@ public class Scope {
 	private Client client;
 	private String scopeName;
 
+	public ScopeDTO toDTO() {
+		ScopeDTO scopeDTO = new ScopeDTO();
+		scopeDTO.setScopeId(scopeId);
+		scopeDTO.setScopeName(scopeName);
+		scopeDTO.setClient(client.toDTO());
+		return scopeDTO;
+	}
 }
