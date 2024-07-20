@@ -88,10 +88,8 @@ public class ClientServiceImpl implements ClientService {
         Client addedClient = clientRepository.save(client);
 
         if (addedClient != null) {
-            if (!isDefaultScopes(addedClient.getScopes())) {
-                LOGGER.info("Adding scopes to db ...");
-                addScopes(addedClient, addedClient.getScopes());
-            }
+            LOGGER.info("Adding scopes to db ...");
+            addScopes(addedClient, addedClient.getScopes());
             return addedClient.getClientId();
         }
         throw new AppException("Can't create the client");
@@ -132,6 +130,15 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
+    public Optional<ClientDTO> getClientByClientId(String clientId) {
+        Optional<Client> client = clientRepository.findByClientId(clientId);
+        if (client.isPresent()) {
+            return Optional.of(client.get().toDTO());
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public void updateClient(String userId, ClientDTO clientDetails) throws AppException {
         Preconditions.checkArgument(clientDetails != null, "Client data can't be empty");
         Preconditions.checkArgument(userId != null && !userId.isBlank(), "User id can't be empty");
@@ -154,18 +161,6 @@ public class ClientServiceImpl implements ClientService {
 
         //TODO Need to validate the client details before updating
         clientRepository.save(newClient);
-    }
-
-    private boolean isDefaultScopes(String clientScopes) {
-        List<String> clientScopesList = List.of(clientScopes.split(","));
-        List<String> defaultScopesList = List.of(defaultScopes.split(","));
-
-        for (String scope : clientScopesList) {
-            if (!defaultScopesList.contains(scope)) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void addScopes(Client client, String scopes) throws AppException {

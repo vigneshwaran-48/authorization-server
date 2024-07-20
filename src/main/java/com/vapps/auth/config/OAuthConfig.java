@@ -47,6 +47,7 @@ import com.vapps.auth.service.CustomOAuth2UserService;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -70,7 +71,18 @@ public class OAuthConfig {
 	@Order(1)
 	SecurityFilterChain asSecurityFilterChain(HttpSecurity http) throws Exception {
 
-		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
+		authorizationServerConfigurer.authorizationEndpoint(
+				authorizationEndpoint -> authorizationEndpoint.consentPage("/oauth/consent"));
+		RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+
+		http
+				.securityMatcher(endpointsMatcher)
+				.authorizeHttpRequests(authorize ->
+						authorize.anyRequest().authenticated()
+				)
+				.csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+				.apply(authorizationServerConfigurer);
 
 		return http
 				.getConfigurer(OAuth2AuthorizationServerConfigurer.class)

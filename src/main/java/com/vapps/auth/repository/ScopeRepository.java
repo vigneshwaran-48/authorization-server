@@ -11,7 +11,6 @@ import com.vapps.auth.model.Scope;
 public interface ScopeRepository extends MongoRepository<Scope, String> {
     
     Optional<Scope> findByScopeNameIgnoreCase(String scopeName);
-    Optional<Scope> findByClientIdAndScopeName(String clientId, String scopeName);
     @Transactional
     List<Scope> deleteByClientId(String id);
     

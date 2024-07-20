@@ -45,9 +45,8 @@ public class ScopeServiceImpl implements ScopeService {
 
     @Override
     public String createScope(ClientDTO client, ScopeDTO scopeDetails) throws AppException {
-        if(scopeRepository.findByClientIdAndScopeName(
-                client.getId(), scopeDetails.getScopeName()).isPresent()) {
-            throw new AppException(HttpStatus.BAD_REQUEST.value(), "Scope already present for this user");
+        if(scopeRepository.findByScopeNameIgnoreCase(scopeDetails.getScopeName()).isPresent()) {
+            throw new AppException(HttpStatus.BAD_REQUEST.value(), "Scope already exists!");
         }
         Scope scope = new Scope();
         scope.setScopeName(scopeDetails.getScopeName());
@@ -89,8 +88,7 @@ public class ScopeServiceImpl implements ScopeService {
     public List<String> checkAndScopes(ClientDTO client, List<ScopeDTO> scopes) throws AppException {
         List<String> addedScopes = new ArrayList<>();
         for (ScopeDTO scope : scopes) {
-            if(scopeRepository.findByClientIdAndScopeName(
-                    client.getId(), scope.getScopeName()).isEmpty()) {
+            if(scopeRepository.findByScopeNameIgnoreCase(scope.getScopeName()).isEmpty()) {
                 addedScopes.add(createScope(client, scope));
             }
         }
