@@ -54,6 +54,11 @@ public class ClientController {
         if (principal == null || principal.getName() == null) {
             throw new AppException(401, "User details not found");
         }
+        if (payload.getScopes() == null) {
+            payload.setScopes("openid");
+        } else if (!payload.getScopes().toLowerCase().contains("openid")) {
+            payload.setScopes(payload.getScopes() + ",openid");
+        }
         List<String> redirectUris = Arrays.asList(payload.getRedirectUris().split(","));
         List<String> scopes = Arrays.asList(payload.getScopes().split(","));
 
@@ -151,7 +156,7 @@ public class ClientController {
         response.setTimestamp(LocalDateTime.now());
         response.setPath("/api/user/" + userId + "/client/" + clientName + "/exists");
         response.setStatus(HttpStatus.OK.value());
-		response.setClientExists(isExists);
+        response.setClientExists(isExists);
 
         return ResponseEntity.ok(response);
     }

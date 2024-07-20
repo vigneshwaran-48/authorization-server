@@ -35,10 +35,15 @@ public class UtilityController {
         String clientBase = userBase + "/" + userId + "/client";
         client.put("base", clientBase);
 
-        Routes routes = new Routes(user, client);
+        Map<String, Object> oauth = new HashMap<>();
+        String oauthBase = "/api/oauth";
+        oauth.put("base", oauthBase);
+        oauth.put("consent", oauthBase + "/consent");
+
+        Routes routes = new Routes(user, client, oauth);
         return ResponseEntity.ok(routes);
     }
 
-    record Routes(Map<String, Object> user, Map<String, Object> client) {}
+    record Routes(Map<String, Object> user, Map<String, Object> client, Map<String, Object> oauth) {}
 
 }

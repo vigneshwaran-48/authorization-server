@@ -1,6 +1,7 @@
 package com.vapps.auth.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 
@@ -28,5 +29,6 @@ public interface ClientService {
 	List<ClientDTO> getAllClients(String userId);
 	
 	ClientDTO getClientById(String userId, String clientId);
+	Optional<ClientDTO> getClientByClientId(String clientId);
 	void updateClient(String userId, ClientDTO commonClientDetails) throws AppException;
 }

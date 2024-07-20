@@ -73,7 +73,11 @@ public class OAuth2AuthorizationConsentServiceImpl implements OAuth2Authorizatio
     }
 
     private AuthorizationConsent toEntity(OAuth2AuthorizationConsent authorizationConsent) {
-        AuthorizationConsent entity = new AuthorizationConsent();
+
+        AuthorizationConsent entity = authorizationConsentRepository
+                .findByRegisteredClientIdAndPrincipalName(authorizationConsent.getRegisteredClientId(),
+                        authorizationConsent.getPrincipalName()).orElse(new AuthorizationConsent());
+
         entity.setRegisteredClientId(authorizationConsent.getRegisteredClientId());
         entity.setPrincipalName(authorizationConsent.getPrincipalName());
 
