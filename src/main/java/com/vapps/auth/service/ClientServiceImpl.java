@@ -160,7 +160,8 @@ public class ClientServiceImpl implements ClientService {
         checkAndUpdateClient(prevClient.get(), newClient);
 
         //TODO Need to validate the client details before updating
-        clientRepository.save(newClient);
+        Client updatedClient = clientRepository.save(newClient);
+        addScopes(updatedClient, updatedClient.getScopes());
     }
 
     private void addScopes(Client client, String scopes) throws AppException {
