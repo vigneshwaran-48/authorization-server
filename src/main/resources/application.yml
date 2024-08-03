@@ -31,6 +31,9 @@ app:
     scopes: openid,email,profile,phone,address
   client:
     clientIdPrefix: vapps
+  security:
+    publicKey: ${VAPPS_AUTH_SERVER_PUBLIC_KEY}
+    privateKey: ${VAPPS_AUTH_SERVER_PRIVATE_KEY}
 logging:
   level:
     org:
