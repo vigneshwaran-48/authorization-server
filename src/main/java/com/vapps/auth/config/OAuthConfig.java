@@ -72,6 +72,9 @@ public class OAuthConfig {
     @Value("${app.security.publicKey}")
     private String rsaPublicKey;
 
+    @Value("${app.security.keyId}")
+    private String rsaKeyId;
+
     private final static Logger LOGGER = LoggerFactory.getLogger(OAuthConfig.class);
 
     @Bean
@@ -98,14 +101,14 @@ public class OAuthConfig {
     SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(authorize -> {
                     try {
-                        authorize.requestMatchers("/index.html", "/welcome", "/static/**", "/*.ico", "/*.json", "/*" +
-												".png",
+                        authorize.requestMatchers("/index.html", "/welcome", "/static/**", "/*.ico", "/*.json",
+                                        "/*" + ".png",
                                         "/*.jpg", "/*jpeg", "/*.html", "/authenticate", "/*.js.map").permitAll()
                                 .requestMatchers("/test").permitAll().requestMatchers(HttpMethod.POST, "/api/user").permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/api/user").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/user/{userId}/profile-image").permitAll().anyRequest()
                                 .authenticated().and().formLogin().loginPage("/oauth").loginProcessingUrl(
-										"/authenticate")
+                                        "/authenticate")
                                 .defaultSuccessUrl("/welcome").usernameParameter("name").passwordParameter("password")
                                 .permitAll().and().csrf().disable()
                                 .logout(l -> l.clearAuthentication(true).deleteCookies().invalidateHttpSession(true)
@@ -183,8 +186,8 @@ public class OAuthConfig {
             PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
             PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
 
-            return new RSAKey.Builder((RSAPublicKey) publicKey).privateKey((RSAPrivateKey) privateKey)
-                    .keyID(UUID.randomUUID().toString()).build();
+            return new RSAKey.Builder((RSAPublicKey) publicKey).privateKey((RSAPrivateKey) privateKey).keyID(rsaKeyId)
+                    .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate RSA Key", e);
         }

@@ -35,6 +35,7 @@ app:
   security:
     publicKey: ${VAPPS_AUTH_SERVER_PUBLIC_KEY}
     privateKey: ${VAPPS_AUTH_SERVER_PRIVATE_KEY}
+    keyId: ${VAPPS_AUTH_SERVER_KEY_ID}
 logging:
   level:
     org:
