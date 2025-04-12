@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClientCreationPayload {
 
-	private String redirectUris, scopes, clientName, grantTypes, clientId, clientSecret, userId;
+    private String redirectUris, scopes, clientName, grantTypes, clientId, clientSecret, userId;
+    private boolean enablePKCE, showConsentScreen;
 
 }

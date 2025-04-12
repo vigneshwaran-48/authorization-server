@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.web.bind.annotation.*;
 
 import com.vapps.auth.exception.AppException;
@@ -37,6 +38,7 @@ public class ClientController {
         clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
         clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_POST);
         clientAuthenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_JWT);
+        clientAuthenticationMethods.add(ClientAuthenticationMethod.NONE);
     }
 
     private void getGrantTypes(Set<AuthorizationGrantType> authorizationGrantTypes) {
@@ -69,7 +71,9 @@ public class ClientController {
                 .clientAuthenticationMethods(this::getClientAuth).clientName(payload.getClientName())
                 .scopes(scope -> scopes.forEach(scope::add))
                 .redirectUris(redirect -> redirectUris.forEach(redirect::add))
-                .authorizationGrantTypes(this::getGrantTypes);
+                .authorizationGrantTypes(this::getGrantTypes).clientSettings(
+                        ClientSettings.builder().requireProofKey(payload.isEnablePKCE())
+                                .requireAuthorizationConsent(payload.isShowConsentScreen()).build());
 
         String clientId = clientService.addClient(principal.getName(), client);
 

@@ -42,9 +42,6 @@ public class ClientServiceImpl implements ClientService {
     @Autowired
     private TokenSettings tokenSettings;
 
-    @Autowired
-    private ClientSettings clientSettings;
-
     @Value("${app.default.scopes}")
     private String defaultScopes;
 
@@ -71,8 +68,7 @@ public class ClientServiceImpl implements ClientService {
             throw new AppException("User not found for " + userId);
         }
         String clientId = UUID.randomUUID().toString();
-        registeredClient.clientId(clientIdPrefix + "-" + clientId.toString()).tokenSettings(tokenSettings)
-                .clientSettings(clientSettings);
+        registeredClient.clientId(clientIdPrefix + "-" + clientId.toString()).tokenSettings(tokenSettings);
 
         Client client = Client.build(registeredClient.build());
 
